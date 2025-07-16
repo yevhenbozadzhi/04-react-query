@@ -5,7 +5,7 @@ interface FetchMoviesResponse {
   results: Movie[];
 }
 
-export async function fetchMovies(query: string): Promise<Movie[]> {
+export async function fetchMovies(query: string, page: number): Promise<Movie[]> {
   const config = {
     params: {
       query,

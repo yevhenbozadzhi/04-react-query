@@ -1,61 +1,62 @@
 import { useState } from 'react';
-import { type Movie } from '../../types/movie';
-import { fetchMovies } from '../../services/movieService';
-import SearchBar from '../SearchBar/SearchBar';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import toast, { Toaster } from 'react-hot-toast';
+
+import { fetchMovies } from '../../services/movieService';
+import { type Movie } from '../../types/movie';
+
+import SearchBar from '../SearchBar/SearchBar';
 import MovieGrid from '../MovieGrid/MovieGrid';
 import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import MovieModal from '../MovieModal/MovieModal';
-
+import Pagination from '../Pagination/Pagination';
 
 export default function App() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
- const handleSearch = async (query: string) => {
-  const trimmedQuery = query.trim();
+ const { data, isLoading, isError } = useQuery({
+  queryKey: ['movies', searchQuery, page],
+  queryFn: () => fetchMovies(searchQuery, page),
+  enabled: searchQuery.trim().length > 0,
+  placeholderData: keepPreviousData,
+});
 
-  if (!trimmedQuery) {
-    toast.error('Please enter your search query.');
-    return;
-  }
 
-  try {
-    setIsLoading(true);
-    setHasError(false);
-    setMovies([]);
-
-    const results = await fetchMovies(trimmedQuery);
-
-    if (results.length === 0) {
-      toast.error('No movies found for your request.');
+  const handleSearch = (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      toast.error('Please enter your search query.');
+      return;
     }
 
-    setMovies(results);
-  } catch {
-    setHasError(true);
-    toast.error('Something went wrong!');
-  } finally {
-    setIsLoading(false);
-  }
-};
+    setSearchQuery(trimmed);
+    setPage(1); 
+  };
+
+  const movies = data?.results || [];
+  const totalPages = data?.total_pages || 0;
 
   return (
     <>
-       <Toaster position='bottom-center' />
+      <Toaster position="bottom-center" />
       <SearchBar onSubmit={handleSearch} />
 
       {isLoading && <Loader />}
-      {hasError && <ErrorMessage />}
-      {!isLoading && !hasError && (
+      {isError && <ErrorMessage />}
+
+      {!isLoading && !isError && (
         <MovieGrid movies={movies} onSelect={setSelectedMovie} />
       )}
 
       {selectedMovie && (
         <MovieModal movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
+      )}
+
+      {totalPages > 1 && (
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       )}
     </>
   );
