@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import toast, { Toaster } from 'react-hot-toast';
 
-import { fetchMovies } from '../../services/movieService';
+import { fetchMovies, type FetchMoviesResponse } from '../../services/movieService';
 import { type Movie } from '../../types/movie';
 
 import SearchBar from '../SearchBar/SearchBar';
@@ -17,13 +17,13 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
- const { data, isLoading, isError } = useQuery({
-  queryKey: ['movies', searchQuery, page],
-  queryFn: () => fetchMovies(searchQuery, page),
-  enabled: searchQuery.trim().length > 0,
-  placeholderData: keepPreviousData,
-});
-
+  const { data, isLoading, isError } = useQuery<FetchMoviesResponse>({
+  
+    queryKey: ['movies', searchQuery, page],
+    queryFn: () => fetchMovies(searchQuery, page),
+    enabled: searchQuery.trim().length > 0,
+    placeholderData: keepPreviousData,
+  });
 
   const handleSearch = (query: string) => {
     const trimmed = query.trim();
@@ -31,9 +31,8 @@ export default function App() {
       toast.error('Please enter your search query.');
       return;
     }
-
     setSearchQuery(trimmed);
-    setPage(1); 
+    setPage(1);
   };
 
   const movies = data?.results || [];

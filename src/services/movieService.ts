@@ -1,17 +1,21 @@
 import axios from 'axios';
-import { type Movie } from '../types/movie';
+import type { Movie } from '../types/movie';
 
-interface FetchMoviesResponse {
+export interface FetchMoviesResponse {
   results: Movie[];
+  total_pages: number;
 }
 
-export async function fetchMovies(query: string, page: number): Promise<Movie[]> {
+export async function fetchMovies(
+  query: string,
+  page: number
+): Promise<FetchMoviesResponse> {
   const config = {
     params: {
       query,
       include_adult: false,
       language: 'en-US',
-      page: 1,
+      page,
     },
     headers: {
       accept: 'application/json',
@@ -24,9 +28,9 @@ export async function fetchMovies(query: string, page: number): Promise<Movie[]>
       'https://api.themoviedb.org/3/search/movie',
       config
     );
-    return response.data.results;
+    return response.data;
   } catch (error) {
     console.error('Error fetching movies:', error);
-    throw error; 
+    throw error;
   }
 }
