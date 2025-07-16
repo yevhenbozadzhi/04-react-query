@@ -23,14 +23,9 @@ export async function fetchMovies(
     },
   };
 
-  try {
-    const response = await axios.get<FetchMoviesResponse>(
-      'https://api.themoviedb.org/3/search/movie',
-      config
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching movies:', error);
-    throw error;
-  }
+  const response = await axios.get<FetchMoviesResponse>(
+    'https://api.themoviedb.org/3/search/movie',
+    config
+  );
+  return response.data;
 }

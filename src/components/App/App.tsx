@@ -23,6 +23,7 @@ export default function App() {
     queryFn: () => fetchMovies(searchQuery, page),
     enabled: searchQuery.trim().length > 0,
     placeholderData: keepPreviousData,
+    
   });
 
   const handleSearch = (query: string) => {
