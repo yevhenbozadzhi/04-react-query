@@ -41,18 +41,18 @@ export default function App() {
   const movies = data?.results || [];
   const totalPages = data?.total_pages || 0;
 
-  const hasShowSuccessToast = useRef(false);
+ const prevSearchQuery = useRef('');
 
-  useEffect(() => {
+useEffect(() => {
   if (isSuccess && data) {
     if (data.results.length === 0) {
       toast('Фільми не знайдено');
-    } else if (!hasShowSuccessToast.current) {
+    } else if (prevSearchQuery.current !== searchQuery) {
       toast.success('Фільми знайдено успішно!');
-      hasShowSuccessToast.current = true;
+      prevSearchQuery.current = searchQuery;
     }
   }
-}, [isSuccess, data]);
+}, [isSuccess, data, searchQuery]);
 
   return (
     <>
@@ -71,7 +71,7 @@ export default function App() {
       )}
 
       {totalPages > 1 && (
-        <Pagination page={page} totalPages={page - 1} onPageChange={setPage} />
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       )}
     </>
   );
