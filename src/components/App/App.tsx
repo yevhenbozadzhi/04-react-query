@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -10,14 +10,16 @@ import MovieGrid from '../MovieGrid/MovieGrid';
 import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import MovieModal from '../MovieModal/MovieModal';
-import Pagination from '../Pagination/Pagination';
+import ReactPagination from '../Pagination/Pagination';
 
 export default function App() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const { data, isLoading, isError } = useQuery<FetchMoviesResponse>({
+ 
+
+  const { data, isLoading, isError, isSuccess } = useQuery<FetchMoviesResponse>({
   
     queryKey: ['movies', searchQuery, page],
     queryFn: () => fetchMovies(searchQuery, page),
@@ -39,6 +41,19 @@ export default function App() {
   const movies = data?.results || [];
   const totalPages = data?.total_pages || 0;
 
+  const hasShowSuccessToast = useRef(false);
+
+  useEffect(() => {
+  if (isSuccess && data) {
+    if (data.results.length === 0) {
+      toast('Фільми не знайдено');
+    } else if (!hasShowSuccessToast.current) {
+      toast.success('Фільми знайдено успішно!');
+      hasShowSuccessToast.current = true;
+    }
+  }
+}, [isSuccess, data]);
+
   return (
     <>
       <Toaster position="bottom-center" />
@@ -56,7 +71,7 @@ export default function App() {
       )}
 
       {totalPages > 1 && (
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <ReactPagination page={page} totalPages={totalPages} onPageChange={setPage} />
       )}
     </>
   );
