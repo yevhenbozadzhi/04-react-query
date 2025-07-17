@@ -10,7 +10,7 @@ import MovieGrid from '../MovieGrid/MovieGrid';
 import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import MovieModal from '../MovieModal/MovieModal';
-import ReactPagination from '../Pagination/Pagination';
+import Pagination from '../Pagination/Pagination';
 
 export default function App() {
   const [page, setPage] = useState(1);
@@ -71,7 +71,7 @@ export default function App() {
       )}
 
       {totalPages > 1 && (
-        <ReactPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination page={page} totalPages={page - 1} onPageChange={setPage} />
       )}
     </>
   );
