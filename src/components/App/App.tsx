@@ -10,22 +10,25 @@ import MovieGrid from '../MovieGrid/MovieGrid';
 import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import MovieModal from '../MovieModal/MovieModal';
-import Pagination from '../Pagination/Pagination';
+import ReactPaginate from 'react-paginate';
+import css from '../css/Pagination.module.css';
 
 export default function App() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
- 
-
-  const { data, isLoading, isError, isSuccess } = useQuery<FetchMoviesResponse>({
-  
+  const {
+    data,
+    isLoading,
+    isError,
+    isSuccess,
+    isFetching,
+  } = useQuery<FetchMoviesResponse>({
     queryKey: ['movies', searchQuery, page],
     queryFn: () => fetchMovies(searchQuery, page),
     enabled: searchQuery.trim().length > 0,
     placeholderData: keepPreviousData,
-    
   });
 
   const handleSearch = (query: string) => {
@@ -36,42 +39,55 @@ export default function App() {
     }
     setSearchQuery(trimmed);
     setPage(1);
+    setSelectedMovie(null); 
   };
 
   const movies = data?.results || [];
   const totalPages = data?.total_pages || 0;
 
- const prevSearchQuery = useRef('');
+  const prevSearchQuery = useRef('');
 
-useEffect(() => {
-  if (isSuccess && data) {
-    if (data.results.length === 0) {
-      toast('Фільми не знайдено');
-    } else if (prevSearchQuery.current !== searchQuery) {
-      toast.success('Фільми знайдено успішно!');
-      prevSearchQuery.current = searchQuery;
-    }
-  }
-}, [isSuccess, data, searchQuery]);
+  useEffect(() => {
+    if (isSuccess && data.results.length === 0) {
+        toast('No movies found for your request.');
+      } else if (prevSearchQuery.current !== searchQuery) {
+        toast.success('Movies found successfully!');
+        prevSearchQuery.current = searchQuery;
+      }
+  }, [isSuccess, data]);
+  
+
 
   return (
     <>
       <Toaster position="bottom-center" />
       <SearchBar onSubmit={handleSearch} />
 
-      {isLoading && <Loader />}
+      {searchQuery && (isLoading || isFetching) && <Loader />}
+
       {isError && <ErrorMessage />}
 
-      {!isLoading && !isError && (
-        <MovieGrid movies={movies} onSelect={setSelectedMovie} />
-      )}
+     {isSuccess && !isFetching && !isError && movies.length > 0 && (
+  <MovieGrid movies={movies} onSelect={setSelectedMovie} />
+)}
+
 
       {selectedMovie && (
         <MovieModal movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
       )}
 
-      {totalPages > 1 && (
-        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      {isSuccess && totalPages > 1 && (
+        <ReactPaginate
+          pageCount={totalPages}
+          pageRangeDisplayed={5}
+          marginPagesDisplayed={1}
+          onPageChange={({ selected }) => setPage(selected + 1)}
+          forcePage={page - 1}
+          containerClassName={css.pagination}
+          activeClassName={css.active}
+          nextLabel="→"
+          previousLabel="←"
+        />
       )}
     </>
   );
